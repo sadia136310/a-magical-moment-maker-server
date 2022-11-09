@@ -36,6 +36,8 @@ async function run() {
             res.send(services);
         });
 
+
+
         app.get('/AllServices/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -43,6 +45,12 @@ async function run() {
             res.send(service);
         });
 
+
+        app.post('/add', async (req, res) => {
+            const add = req.body;
+            const result = await serviceCollection.insertOne(add);
+            res.send(result);
+        });
         // reviews api 
 
 
