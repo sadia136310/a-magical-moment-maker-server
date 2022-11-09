@@ -70,6 +70,30 @@ async function run() {
             const result = await reviewCollection.insertOne(review);
             res.send(result);
         });
+
+        
+
+        app.put('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const review = req.body;
+            const option = { upset: true };
+            const updatedReview = {
+                $set: {
+                    name: review.customer,
+                    rating: review.rating,
+                    image: review.image,
+                    message: review.message
+                }
+            };
+            const result = await reviewCollection.updateOne(filter, updatedReview, option);
+            res.send(result);
+
+
+        });
+
+
+
         app.delete('/reviews/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
