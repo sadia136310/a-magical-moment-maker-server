@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+
+
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -11,7 +14,20 @@ app.use(cors());
 app.use(express.json());
 
 
-
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ massage: "unauthorize" });
+    }
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ massage: "unauthorize" });
+        }
+        req.decoded = decoded;
+        next();
+    });
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wg03kwr.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -23,6 +39,16 @@ async function run() {
     try {
         const serviceCollection = client.db('momentMaker').collection('services');
         const reviewCollection = client.db('momentMaker').collection('reviews');
+
+        app.post("/jwt", (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: "1d",
+            });
+            res.send({ token });
+           });
+
+
         app.get('/HomeServices', async (req, res) => {
             const query = {}
             const cursor = serviceCollection.find(query);
@@ -68,7 +94,7 @@ async function run() {
             res.send(reviewsByTime);
         });
 
-        app.get('/reviews', async (req, res) => {
+        app.get('/reviews',verifyJWT, async (req, res) => {
             let query = {};
             if (req.query.email) {
                 query = {
@@ -101,7 +127,7 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const review = req.body;
-            console.log(review);
+        
             const option = { upset: true };
             const updatedReview = {
                 $set: {
