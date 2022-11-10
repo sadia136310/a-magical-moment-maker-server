@@ -63,7 +63,9 @@ async function run() {
             }
             const cursor = reviewCollection.find(query);
             const review = await cursor.toArray();
-            res.send(review);
+            const reviewsByTime = review.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).reverse()
+
+            res.send(reviewsByTime);
         });
 
         app.get('/reviews', async (req, res) => {
@@ -99,10 +101,12 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const review = req.body;
+            console.log(review);
             const option = { upset: true };
             const updatedReview = {
                 $set: {
-                    name: review.customer,
+
+                    customer: review.name,
                     rating: review.rating,
                     image: review.image,
                     message: review.message
